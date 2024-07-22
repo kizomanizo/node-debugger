@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 dotenv.config({ path: `.env.local`, override: true });
 import bodyParser from "body-parser";
 
+import ErrorHelper, { CustomError } from "./helpers/error-helper";
+
 class Server {
   private app: Application;
   private port: number | string;
@@ -11,6 +13,7 @@ class Server {
     this.app = express();
     this.port = process.env.NODE_PORT || 3000;
     this.initializeMiddleware();
+    this.initializeErrorHandling();
   }
 
   private initializeMiddleware(): void {
@@ -18,6 +21,13 @@ class Server {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: false }));
     this.app.use(bodyParser.json());
+  }
+
+  private initializeErrorHandling() {
+    const errorHelperInstance = new ErrorHelper();
+    this.app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
+      errorHelperInstance.handleError(err, req, res, next);
+    });
   }
 
   public start(): void {
